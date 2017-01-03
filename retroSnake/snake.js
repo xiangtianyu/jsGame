@@ -22,7 +22,7 @@
 
     function randomBlock() {
         while (true) {
-            var ran = Math.round(Math.random()*((width/block_width) * (height/block_height)));
+            var ran = Math.floor(Math.random()*((width/block_width) * (height/block_height)));
             if (checkBlock(ran) == true){
                 return ran;
             }
