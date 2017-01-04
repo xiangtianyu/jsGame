@@ -28,13 +28,11 @@
     var x = width / block_width;
     var y = height / block_height;
 
-    var start_point = [x / 2, 0];
+    var start_point = [x / 2, 1];
 
     var all_shape;
 
     var all_color = ["Green", "White", "Red", "Blue"];
-
-    var isBottom = false;
 
     var now_shape;
     var now_color;
@@ -180,11 +178,32 @@
             if (e[0] < ls)  ls = e[0];
             if (e[0] > rs)  rs = e[0];
         });
-        return (ls >= 0 && rs < x);
+        return (ls < 0 || rs >= x);
     }
 
     function checkBottom(block) {
-        var bottom = y;
+        var bottom = 0;
+        block.forEach(function (e) {
+            if (e[1] > bottom)  bottom = e[1];
+        });
+        return (bottom >= y);
+    }
+
+    function checkTop(block) {
+        var top = y;
+        block.forEach(function (e) {
+            if (e[1] < top)     top = e[1];
+        });
+        return (top < 0);
+    }
+
+    function checkStop(block) {
+        for (var i = 0; i < block.length; i++) {
+            if (block_used[block[i][1]][block[i][0]] == 1){
+                return true;
+            }
+        }
+        return false;
     }
 
     function initBlockUsed() {
@@ -196,8 +215,15 @@
             block_used.push(line);
         }
     }
+
+    function changeBlockUsed(block) {
+        block.forEach(function (e) {
+            block_used[e[1]][e[0]] = 1;
+        })
+    }
     
     window.onload = function() {
+        initBlockUsed();
         all_shape = getAllShape();
         ctx = document.getElementById("snake").getContext("2d");
         document.getElementById("snake").setAttribute("height", height+"px");
@@ -211,7 +237,7 @@
             var dir = key - 37;
             if (dir == 0) {
                 next_shape = blockChange(now_shape, 0);
-                if (checkSide(next_shape)) {
+                if (!checkSide(next_shape) && !checkStop(next_shape)) {
                     redrawBlock(now_shape, "Black");
                     now_shape = next_shape;
                     redrawBlock(now_shape, now_color);
@@ -220,7 +246,7 @@
             }
             else if (dir == 2) {
                 next_shape = blockChange(now_shape, 1);
-                if (checkSide(next_shape)) {
+                if (!checkSide(next_shape) && !checkStop(next_shape)) {
                     redrawBlock(now_shape, "Black");
                     now_shape = next_shape;
                     redrawBlock(now_shape, now_color);
@@ -230,7 +256,7 @@
             else if (dir == 1) {
                 var n = now_point;
                 next_shape = rotation(now_point, now_shape);
-                if (checkSide(next_shape)) {
+                if (!checkSide(next_shape) && !checkStop(next_shape)) {
                     redrawBlock(now_shape, "Black");
                     now_shape = next_shape;
                     redrawBlock(now_shape, now_color);
@@ -242,7 +268,14 @@
         };
 
         var interval = setInterval(function () {
-            if (isBottom) {
+            if (checkTop(now_shape) || checkStop(now_shape)){
+                clearInterval(interval);
+                alert("GAME, OVER!");
+            }
+            next_shape = blockChange(now_shape, 2);
+            down_height--;
+            if (checkBottom(next_shape) || checkStop(next_shape)) {
+                changeBlockUsed(now_shape);
                 redrawBlock(now_shape, now_color);
                 now_shape = getOneShape();
                 now_color = getOneColor();
@@ -252,6 +285,6 @@
                 now_shape = blockChange(now_shape, 2);
                 redrawBlock(now_shape, now_color);
             }
-        }, 1000)
+        }, 500)
     }
 })();
